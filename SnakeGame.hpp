@@ -166,7 +166,7 @@ void SnakeGame::addSnake()
 {
 	Point snakeTail = this->snake.back();
 	Point addTail;
-
+	
 	// 추가할 수 있는 위치 계산
 	if (this->map[snakeTail.y][snakeTail.x - 1] == ' ') {
 		addTail.x = snakeTail.x - 1;
@@ -187,6 +187,7 @@ void SnakeGame::addSnake()
 
 	// 뱀 꼬리 추가
 	this->snake.push_back(addTail);
+	this->length++;
 	this->map[addTail.y][addTail.x] = SHAPE_SNAKE;
 }
 
@@ -197,25 +198,25 @@ void SnakeGame::moveSnake()
 
 	// 좌표 변화량 설정
 	switch (this->direction) {
-	case UP:
-		dp.x = 0;
-		dp.y = -1;
-		break;
+		case UP:
+			dp.x = 0;
+			dp.y = -1;
+			break;
 
-	case DOWN:
-		dp.x = 0;
-		dp.y = 1;
-		break;
+		case DOWN:
+			dp.x = 0;
+			dp.y = 1;
+			break;
 
-	case LEFT:
-		dp.x = -1;
-		dp.y = 0;
-		break;
+		case LEFT:
+			dp.x = -1;
+			dp.y = 0;
+			break;
 
-	case RIGHT:
-		dp.x = 1;
-		dp.y = 0;
-		break;
+		case RIGHT:
+			dp.x = 1;
+			dp.y = 0;
+			break;
 	}
 
 	// 뱀 머리 추가
@@ -294,7 +295,7 @@ void SnakeGame::printMap()
 {
 	// 덮어쓰기를 위한 콘솔의 커서 좌표 이동
 	gotoConsoleCursor(0, 0);
-
+	
 	// 맵 출력
 	for (int y = 0; y < MAP_SIZE_Y; y++) {
 		puts(this->map[y]);
