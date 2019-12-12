@@ -1,4 +1,5 @@
 #pragma once
+
 #include <iostream>
 #include <string>
 #include <list>
@@ -6,7 +7,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <cassert>
-using namespace std;
 
 // 윈도우 및 리눅스 호환성을 위한 헤더 파일
 #ifdef _WIN32
@@ -16,8 +16,8 @@ using namespace std;
 #endif
 
 // 맵 크기 설정
-#define MAP_SIZE_X 80
-#define MAP_SIZE_Y 20
+#define MAP_SIZE_X 81
+#define MAP_SIZE_Y 21
 
 // 콘솔에 표시되는 모양 설정
 #define SHAPE_WALL '#'
@@ -69,18 +69,14 @@ public:
 	}
 };
 
-
-
 class SnakeGame
 {
 private:
-	char map[MAP_SIZE_Y + 1][MAP_SIZE_X + 1];
+	char map[MAP_SIZE_Y][MAP_SIZE_X + 1];
 	std::list<Point> snake;
-	list<Point>::iterator iter;
 	std::size_t length;
 	int direction;
 	Point feedPos;
-
 
 	void gotoConsoleCursor(int x, int y);
 
@@ -138,6 +134,11 @@ SnakeGame::SnakeGame()
 		this->map[y][0] = this->map[y][MAP_SIZE_X - 1] = SHAPE_WALL;
 	}
 
+	// 맵 NULL 추가 (게임과는 관련이 없으며 오직 콘솔에 출력하기 위한 용도)
+	for (int y = 0; y < MAP_SIZE_Y; y++) {
+		this->map[y][MAP_SIZE_X] = NULL;
+	}
+
 	// 뱀 초기 길이 설정
 	this->length = 5;
 
@@ -163,7 +164,30 @@ SnakeGame::SnakeGame()
 // 뱀 길이 1 증가
 void SnakeGame::addSnake()
 {
+	Point snakeTail = this->snake.back();
+	Point addTail;
 
+	// 추가할 수 있는 위치 계산
+	if (this->map[snakeTail.y][snakeTail.x - 1] == ' ') {
+		addTail.x = snakeTail.x - 1;
+		addTail.y = snakeTail.y;
+	}
+	else if (this->map[snakeTail.y][snakeTail.x + 1] == ' ') {
+		addTail.x = snakeTail.x + 1;
+		addTail.y = snakeTail.y;
+	}
+	else if (this->map[snakeTail.y - 1][snakeTail.x] == ' ') {
+		addTail.x = snakeTail.x;
+		addTail.y = snakeTail.y - 1;
+	}
+	else if (this->map[snakeTail.y + 1][snakeTail.x] == ' ') {
+		addTail.x = snakeTail.x;
+		addTail.y = snakeTail.y + 1;
+	}
+
+	// 뱀 꼬리 추가
+	this->snake.push_back(addTail);
+	this->map[addTail.y][addTail.x] = SHAPE_SNAKE;
 }
 
 // 뱀 이동
@@ -215,35 +239,54 @@ void SnakeGame::setDirection(int direction)
 // 먹이를 먹었으면 true, 아니면 false 반환
 bool SnakeGame::checkEatFeed()
 {
-	if (snake.front().x == feedPos.x && snake.front().y == feedPos.y)
-		return true;
-	else
-		return false;
+	return this->snake.front() == this->feedPos;
 }
 
-// 벽이나 자기 자신에게 부딪혔으면 true, 아니면 false 반환
+// 벽이나 자기 자신에게 부딪쳤으면 true, 아니면 false 반환
 bool SnakeGame::checkCollision()
 {
-	for (iter = snake.begin(); iter!=snake.end(); iter++)//자기몸에 부딫쳤을떄
-	{
-		if(snake.front().operator==(*iter))
+	Point snakeHead = this->snake.front();
+
+	// 벽에 부딪쳤는지 체크
+	if (snakeHead.x <= 0 || snakeHead.x >= MAP_SIZE_X - 1) {
 		return true;
 	}
-	for (iter = snake.begin(); iter != snake.end(); iter++)
-	{
-		if ( iter.operator==(snake.begin()) )
-			return true;
+
+	if (snakeHead.y <= 0 || snakeHead.y >= MAP_SIZE_Y - 1) {
+		return true;
 	}
+
+	// 자기 자신에게 부딪쳤는지 체크
+	std::list<Point>::iterator it = this->snake.begin();
+	it++;
+
+	while (it != this->snake.end()) {
+		if (*it == snakeHead) {
+			return true;
+		}
+
+		it++;
+	}
+
 	return false;
 }
 
 // 먹이를 랜덤한 위치에 생성
 void SnakeGame::createFeed()
 {
-	
-	//if(this->checkEatFeed())   해주고
-	feedPos.x = rand() % 49 + 1;
-	feedPos.y = rand() % 49 + 1;
+	int x;
+	int y;
+
+	// 뱀과 충돌하지 않도록 좌표 생성
+	do
+	{
+		x = rand() % (MAP_SIZE_X - 1) + 1;
+		y = rand() % (MAP_SIZE_Y - 1) + 1;
+	} while (this->map[y][x] != ' ');
+
+	// 먹이 설정
+	feedPos = Point(x, y);
+	this->map[y][x] = SHAPE_FEED;
 }
 
 // 맵 출력
